@@ -1,3 +1,21 @@
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+
+def check_connection(s3, bucket):
+    '''Checa a conexão com um determinado bucket, caso conexão falhe, loga e levanta o erro para falhr task'''
+    try:
+        s3.head_bucket(Bucket=bucket)
+        logger.info("Conexão com bucket S3 validada com sucesso.")
+
+    except:
+        logger.error(f"Falha ao acessar bucket S3!")
+        raise
 
 def read_cursor():
     pass

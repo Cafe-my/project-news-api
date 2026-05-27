@@ -39,7 +39,7 @@ def task_raw():
     logger.info("-------------------->> Iniciando job RAW <<--------------------") 
     
     def operator_raw(categories):
-        s3 = boto3.client("s3")
+        s3 = boto3.client("s3",region_name="us-east-1")
         check_connection(s3, DESTINATION_BUCKET)
 
         failed_categories = []
@@ -48,15 +48,18 @@ def task_raw():
                 params = {
                     "apiKey": API_KEY,
                     "category": category,
-                    #"sources": "bbc-news"
                 }
-                final_json = ProcessorRaw(API_LINK, params, datetime_utc).execute()
+                final_json, total_results = ProcessorRaw(API_LINK, params, datetime_utc).execute()
+
+                logger.info(f"Total de resultados para {category}: {total_results}")
 
                 partition_key = format_partition_key(datetime_utc)
                 with BytesIO(final_json.encode("utf-8")) as file_obj:
                     s3.upload_fileobj(file_obj, DESTINATION_BUCKET, f"{category}/{partition_key}/data_{timestamp}.json")
                     
-                write_cursor(s3, DESTINATION_BUCKET, f"{category}/cursor.txt", datetime_utc)
+                #write_cursor(s3, DESTINATION_BUCKET, f"{category}/cursor.txt", datetime_utc)
+
+                logger.info(f"Categoria {category} processada e armazenada com sucesso no bucket.")
                 time.sleep(3)
                 
             except Exception as e:
@@ -65,7 +68,6 @@ def task_raw():
                 failed_categories.append(category)
                 
         return failed_categories 
-
         
     try:
         API_KEY = os.getenv("API_KEY")
