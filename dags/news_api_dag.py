@@ -2,7 +2,7 @@ from airflow import DAG
 from datetime import datetime, timedelta
 from airflow.operators.python import PythonOperator
 
-from src.job_raw import task_raw
+from src.jobs.job_raw import task_raw
 
 
 default_args = {
