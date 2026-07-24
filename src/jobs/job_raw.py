@@ -36,6 +36,9 @@ datetime_utc = datetime.now(UTC)
 file_name = datetime_utc.strftime("%Y%m%dT%H%M%S")
 
 def task_raw():
+    '''Realiza a ingestão de dados em JSON da API NewsAPI, para a camada RAW. 
+    O job processa cada categoria obtendo as notícias mais populares do dia anterior à data de execução 
+    e armazena os dados no bucket S3, em formato JSON, com partições por categoria, ano-mes e dia'''
     logger.info("-------------------->> Iniciando job RAW <<--------------------") 
     
     def operator_raw(

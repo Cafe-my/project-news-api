@@ -4,9 +4,10 @@ import logging
 import os
 import boto3
 from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
 
-from src.utils.cursor import check_connection, get_list_dates, read_cursor
-from src.utils.partitions import partitions_filter
+from src.utils.cursor import check_connection, get_list_dates, read_cursor, write_cursor
+from src.utils.partitions import partitions_filter, upload_data
 from src.processors.processor_trusted import ProcessorTrusted
 
 from dotenv import load_dotenv
@@ -40,8 +41,6 @@ def task_trusted():
         failed_categories = []
         for category in categories:
             try:
-                # cursor_raw = datetime.strptime('2026-06-02', "%Y-%m-%d").date()
-                # cursor_trusted = datetime.strptime('2026-06-01', "%Y-%m-%d").date()
                 logger.info(f"Processando categoria: {category}")
 
                 cursor_raw = read_cursor(s3, SOURCE_BUCKET, category)
@@ -51,12 +50,17 @@ def task_trusted():
                 dates = get_list_dates(cursor_raw, cursor_trusted)
                 logger.info(f"Datas a serem processadas: {dates}")
 
-                df = partitions_filter(dates, SOURCE_BUCKET, category)
+                df = partitions_filter(spark, dates, SOURCE_BUCKET, category)
 
                 if df is not None:
-                    df = ProcessorTrusted(df, datetime_utc).execute()
+                    df, cursor = ProcessorTrusted(df, datetime_utc, category).execute()
+                    logger.info(f"Processamento da categoria concluído.")
 
+                    upload_data(df, DESTINATION_BUCKET)
+                    logger.info(f"Upload dos dados da categoria concluído com sucesso.")
 
+                    write_cursor(s3, DESTINATION_BUCKET, f"{category}/cursor.txt", cursor)
+                    logger.info(f"Cursor atualizado para {cursor}")
                 else:
                     logger.info(f"Nenhuma nova data para processar na categoria {category}.")
 

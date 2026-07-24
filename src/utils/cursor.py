@@ -8,10 +8,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def get_list_dates(cursor_raw, cursor_trusted):
+def get_list_dates(cursor, cursor_main):
+    if cursor_main >= cursor:
+        return []
+    
     dates = [
-        (cursor_trusted + timedelta(days=i)).strftime("%Y-%m-%d")
-        for i in range(1, (cursor_raw - cursor_trusted).days + 1)
+        (cursor_main + timedelta(days=i)).strftime("%Y-%m-%d")
+        for i in range(1, (cursor - cursor_main).days + 1)
     ]
     return dates
 

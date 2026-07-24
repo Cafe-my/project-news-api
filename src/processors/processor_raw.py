@@ -20,7 +20,7 @@ class ProcessorRaw:
     def _json_processor(self):
         response = requests.get(self.url, params=self.params, timeout=30)
 
-        ''' loga o status code da resposta e quantidade de resultados, para monitoramento e debugging'''
+        # loga o status code da resposta e quantidade de resultados, para monitoramento e debugging
         if response.status_code == 200:
             data = response.json() # dados no formato JSON, já como dicionário do Python
         else:
@@ -28,16 +28,16 @@ class ProcessorRaw:
         
         self.total_results = data.get("totalResults")
 
-        ''' adiciona um campo de metadata com a data e hora da execução do job, e um campo de data com os dados da API'''
+        # adiciona um campo de metadata com a data e hora da execução do job, e um campo de data com os dados da API
         self.final_json = {
             "metadata": {
                 "ingestion_timestamp": self.datetime_utc
             },
             "data": data
         }
-        
-        self.final_json = json.dumps(self.final_json) # transforma o dict em JSON string
 
+        # transforma o dict em JSON string
+        self.final_json = json.dumps(self.final_json) 
         return self
     
     def execute(self):

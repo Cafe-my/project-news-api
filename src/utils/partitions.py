@@ -9,7 +9,7 @@ def format_partition_key(partition_key: datetime) -> str:
     
     return f"y={y}/d={d}"
 
-def partitions_filter(dates, BUCKET, category):
+def partitions_filter(spark, dates, BUCKET, category):
     if not dates:
         return None
     else:
@@ -19,3 +19,13 @@ def partitions_filter(dates, BUCKET, category):
         ]
 
         return spark.read.json(paths)
+    
+def upload_data(df, BUCKET):
+    '''
+    Faz o upload do DataFrame para o bucket S3, particionado por categoria, ano-mes e dia
+    Em caso de reprocessamento, sobrescreve os dados existentes para a mesma partição
+    '''
+    df.write \
+    .mode("overwrite") \
+    .partitionBy("category", "y", "d") \
+    .parquet(f"s3a://{BUCKET}/")
